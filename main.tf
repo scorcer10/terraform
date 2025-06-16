@@ -1,10 +1,10 @@
 provider "aws" {
-    region = "us-east-2"  
+    region = "us-west-2"  
 }
 
 resource "aws_instance" "foo" {
-  ami           = "ami-06971c49acd687c30" # us-west-2
-  instance_type = "t2.micro"
+  ami           = "ami-0779fe5e56472b841"  # Amazon Linux 2023 (ARM)
+  instance_type = "t4g.micro"
   tags = {
       Name = "TF-Instance"
   }
