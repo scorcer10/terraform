@@ -23,15 +23,10 @@ pipeline {
                     }
                 }
             }
-            stage('terraform init') {
-            steps {
-                sh 'pwd;cd terraform/'
-                sh 'terraform init'
-            }
 
         stage('Plan') {
             steps {
-                //sh 'pwd;cd terraform/ ; terraform init'
+                sh 'pwd;cd terraform/ ; terraform init'
                 sh "pwd;cd terraform/ ; terraform plan -out tfplan"
                 sh 'pwd;cd terraform/ ; terraform show -no-color tfplan > tfplan.txt'
             }
