@@ -12,8 +12,29 @@ terraform {
 provider "aws" {
   region = "us-west-2"
 }
+# Data source to get the latest Amazon Linux 2023 ARM64 AMI
+data "aws_ami" "amazon_linux_2023_arm64" {
+  most_recent = true
+  owners      = ["amazon"]
+  
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*"]
+  }
+  
+  filter {
+    name   = "architecture"
+    values = ["arm64"]
+  }
+  
+  filter {
+    name   = "state"
+    values = ["available"]
+  }
+}
+
 resource "aws_instance" "foo" {
-  ami           = "ami-0c94855ba95b798c7"  # Amazon Linux 2023 (ARM) - us-west-2
+  ami           = data.aws_ami.amazon_linux_2023_arm64.id
   instance_type = "t4g.micro"
   tags = {
       Name = "TF-Instance"
