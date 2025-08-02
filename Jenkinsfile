@@ -1,6 +1,11 @@
 pipeline {
     parameters {
-        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply after generating plan?')
+        choice(
+            name: 'action',
+            choices: ['plan', 'apply', 'destroy'],
+            description: 'Select the Terraform action to perform'
+        )
+        booleanParam(name: 'autoApprove', defaultValue: false, description: 'Automatically run apply/destroy after generating plan?')
     } 
     environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID_NEW')
@@ -20,14 +25,37 @@ pipeline {
         }
         stage('Plan') {
             steps {
-                sh 'pwd; cd terraform; rm -rf .terraform .terraform.lock.hcl'
-                sh 'pwd; cd terraform; terraform init'
-                sh 'pwd; cd terraform; terraform plan -out tfplan'
-                sh 'pwd; cd terraform; terraform show -no-color tfplan > tfplan.txt'
+                script {
+                    sh '''
+                        cd terraform
+                        echo "Cleaning up previous state..."
+                        rm -rf .terraform .terraform.lock.hcl
+                        
+                        echo "Initializing Terraform..."
+                        terraform init
+                        
+                        echo "Selected action: ${action}"
+                        
+                        if [ "${action}" = "destroy" ]; then
+                            echo "Creating destroy plan..."
+                            terraform plan -destroy -out tfplan
+                        else
+                            echo "Creating ${action} plan..."
+                            terraform plan -out tfplan
+                        fi
+                        
+                        echo "Saving plan output..."
+                        terraform show -no-color tfplan > tfplan.txt
+                    '''
+                }
             }
         }
         stage('Approval') {
             when {
+                anyOf {
+                    equals expected: 'apply', actual: params.action
+                    equals expected: 'destroy', actual: params.action
+                }
                 not {
                     equals expected: true, actual: params.autoApprove
                 }
@@ -35,14 +63,28 @@ pipeline {
             steps {
                 script {
                     def plan = readFile 'terraform/tfplan.txt'
-                    input message: "Do you want to apply the plan?",
+                    def actionText = params.action == 'destroy' ? 'destroy the infrastructure' : 'apply the plan'
+                    input message: "Do you want to ${actionText}?",
                     parameters: [text(name: 'Plan', description: 'Please review the plan', defaultValue: plan)]
                 }
             }
         }
-        stage('Apply') {
+        stage('Execute') {
+            when {
+                anyOf {
+                    equals expected: 'apply', actual: params.action
+                    equals expected: 'destroy', actual: params.action
+                }
+            }
             steps {
-                sh 'pwd; cd terraform; terraform apply -input=false tfplan'
+                script {
+                    sh '''
+                        cd terraform
+                        echo "Executing Terraform ${action}..."
+                        terraform apply -input=false tfplan
+                        echo "Terraform ${action} completed successfully!"
+                    '''
+                }
             }
         }
     }
