@@ -5,7 +5,7 @@ pipeline {
     environment {
         AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID_NEW')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY_NEW')
-        PATH = "${env.PATH}:/usr/local/bin"  // Add Terraform binary directory to PATH
+        PATH = "${env.PATH}:/opt/homebrew/bin:/usr/local/bin"  // Add Terraform binary directory to PATH
     }
     agent any
     stages {
