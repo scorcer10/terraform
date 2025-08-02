@@ -7,3 +7,12 @@
 
 # .tfvars files
 *.tfvars
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+.idea_modules/
+atlassian-ide-plugin.xml
