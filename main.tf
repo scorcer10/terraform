@@ -24,11 +24,11 @@ resource "random_id" "bucket_suffix" {
   byte_length = 4
 }
 
-resource "aws_instance" "test_instance" {
+/*resource "aws_instance" "test_instance" {
   ami           = "ami-0387d929287ab193e"
   instance_type = "t3.micro"
 
   tags = {
     Name        = "TF-Test"
   }
-}
+}*/
